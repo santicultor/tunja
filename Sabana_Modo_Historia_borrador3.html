@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sabana · Modo Historia — borrador 3</title>
+<style>
+  :root{
+    --azul:#00205B; --azul2:#00387b; --blanco:#fff;
+    --tenue:rgba(255,255,255,.66);
+    --borde:rgba(255,255,255,.22);
+    --cian:#8fd0ff;
+    --f:"Segoe UI Variable Display","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--f);background:var(--azul);color:#fff;overflow:hidden;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+  input,select{font-family:inherit}
+  :focus-visible{outline:3px solid #fff;outline-offset:3px}
+
+  .app{height:100vh;display:flex;flex-direction:column}
+
+  /* ---------------- HUD ---------------- */
+  .hud{flex:0 0 auto;display:flex;align-items:center;gap:clamp(.8rem,2vw,2rem);
+       padding:.7rem clamp(1.1rem,3vw,2.6rem);border-bottom:1px solid var(--borde)}
+  .hud.off{visibility:hidden}
+  .hud-p{min-width:8rem}
+  .hud-nom{font-size:clamp(.82rem,1.15vw,1rem);font-weight:800;letter-spacing:.01em}
+  .hud-ruta{font-size:.72rem;color:var(--tenue)}
+  .meds{display:flex;gap:clamp(.7rem,1.8vw,1.6rem);margin-left:auto;align-items:center}
+  .med{width:clamp(4rem,7.5vw,7.5rem)}
+  .med .et{display:flex;justify-content:space-between;font-size:.64rem;color:var(--tenue);margin-bottom:.2rem}
+  .med .barra{height:.38rem;background:rgba(255,255,255,.14);border-radius:99px;overflow:hidden}
+  .med .rel{height:100%;background:#fff;border-radius:99px;transition:width .7s cubic-bezier(.2,.8,.2,1)}
+  .objs{display:flex;align-items:center;gap:.45rem;border-left:1px solid var(--borde);padding-left:clamp(.7rem,1.8vw,1.6rem)}
+  .objs .n{font-size:1.15rem;font-weight:800;font-variant-numeric:tabular-nums}
+  .objs .l{font-size:.64rem;color:var(--tenue);line-height:1.1}
+  .flash{position:fixed;top:3.4rem;right:clamp(1.1rem,3vw,2.6rem);font-size:.82rem;font-weight:800;
+         background:var(--azul2);border:1px solid var(--borde);border-radius:99px;padding:.32rem .85rem;z-index:30}
+
+  .zona{flex:1 1 auto;position:relative;overflow:hidden}
+  .pant{position:absolute;inset:0;overflow-y:auto;display:flex;flex-direction:column;justify-content:center;
+        padding:clamp(1rem,3.5vh,2.6rem) clamp(1.3rem,5vw,4.5rem)}
+  .oculto{display:none!important}
+
+  .kick{font-size:clamp(.72rem,1vw,.9rem);color:var(--tenue);margin-bottom:.7rem}
+  .linea{font-size:clamp(1.6rem,4vw,3.4rem);font-weight:300;line-height:1.15;letter-spacing:-.022em;max-width:20ch}
+  .linea strong{font-weight:700}
+  .pista{margin-top:1.5rem;font-size:.8rem;color:rgba(255,255,255,.4)}
+  .parpadea{animation:pp 1.4s steps(2,start) infinite}
+  @keyframes pp{0%,100%{opacity:1}50%{opacity:.25}}
+
+  .dlg{margin-top:1.3rem;border-left:3px solid var(--cian);padding:.15rem 0 .15rem 1rem;max-width:32ch}
+  .dlg .q{font-size:.72rem;font-weight:800;color:var(--cian);letter-spacing:.04em}
+  .dlg p{font-size:clamp(1rem,1.7vw,1.4rem);line-height:1.35;font-weight:300;margin-top:.12rem}
+
+  /* ---------------- pantalla de título ---------------- */
+  .consola{align-items:flex-start;justify-content:center}
+  .marca{font-size:.75rem;letter-spacing:.42em;color:var(--cian);font-weight:800;margin-bottom:.9rem}
+  .titulo{font-size:clamp(2.8rem,9.5vw,8.5rem);font-weight:800;letter-spacing:-.05em;line-height:.86}
+  .titulo span{display:block;font-weight:200;letter-spacing:-.03em}
+  .start{margin-top:clamp(1.6rem,4vh,2.8rem);font-size:clamp(.95rem,1.5vw,1.25rem);font-weight:800;letter-spacing:.14em}
+  .menu-mini{margin-top:1.6rem;display:flex;gap:.6rem;flex-wrap:wrap}
+  .mbtn{border:1px solid var(--borde);border-radius:8px;padding:.5rem 1rem;font-size:.82rem;color:var(--tenue)}
+  .mbtn:hover{color:#fff;border-color:#fff}
+  .pie-v{position:absolute;bottom:1.1rem;left:clamp(1.3rem,5vw,4.5rem);font-size:.72rem;color:rgba(255,255,255,.3)}
+
+  /* ---------------- acto ---------------- */
+  .acto{align-items:flex-start}
+  .acto-n{font-size:clamp(3.5rem,13vw,11rem);font-weight:800;letter-spacing:-.06em;line-height:.8;color:var(--azul2)}
+  .acto-t{font-size:clamp(1.3rem,3vw,2.4rem);font-weight:700;letter-spacing:-.02em;margin-top:.3rem}
+  .acto-s{font-size:clamp(.85rem,1.2vw,1.05rem);color:var(--tenue);margin-top:.5rem;max-width:40ch;line-height:1.45}
+
+  /* ---------------- selección de personaje ---------------- */
+  .pers{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1.2rem}
+  .pcard{text-align:left;background:var(--azul2);border:2px solid var(--borde);border-radius:16px;padding:1.1rem 1.15rem;
+         transition:transform .12s,border-color .12s}
+  .pcard:hover{transform:translateY(-4px);border-color:#fff}
+  .pcard .pk{display:inline-grid;place-items:center;width:1.8rem;height:1.8rem;border-radius:7px;
+             background:rgba(255,255,255,.2);font-weight:800;font-size:.9rem;margin-bottom:.6rem}
+  .pcard h3{font-size:clamp(1.15rem,1.9vw,1.6rem);font-weight:800;letter-spacing:-.02em}
+  .pcard .tag{font-size:.86rem;color:var(--tenue);line-height:1.35;margin:.3rem 0 .8rem;min-height:2.4em}
+  .pstat{display:flex;justify-content:space-between;font-size:.74rem;color:var(--tenue);margin-bottom:.22rem}
+  .pbar{height:.32rem;background:rgba(255,255,255,.14);border-radius:99px;overflow:hidden;margin-bottom:.45rem}
+  .pbar i{display:block;height:100%;background:var(--cian)}
+
+  /* ---------------- decisión ---------------- */
+  .dec{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(1.3rem,4vw,3.5rem);align-items:center}
+  .voto{display:flex;flex-direction:column;gap:.65rem}
+  .instr{font-size:.78rem;color:var(--cian);font-weight:800}
+  .op{display:flex;gap:.85rem;align-items:center;text-align:left;background:var(--azul2);
+      border:1px solid var(--borde);border-radius:12px;padding:.8rem 1rem;
+      font-size:clamp(.9rem,1.25vw,1.08rem);line-height:1.3;transition:transform .12s,background .12s}
+  .op:hover{background:#0a4a97;transform:translateX(3px)}
+  .op .k{flex:0 0 2rem;height:2rem;border-radius:7px;background:rgba(255,255,255,.18);
+         display:grid;place-items:center;font-weight:800;font-size:.95rem}
+  .op.gana{background:#fff;color:var(--azul);border-color:#fff}
+  .op.gana .k{background:var(--azul);color:#fff}
+  .fila{display:flex;align-items:center;gap:.8rem;margin-top:.3rem;flex-wrap:wrap}
+  .bv{background:#fff;color:var(--azul);border-radius:9px;padding:.55rem 1.1rem;font-weight:800;font-size:.88rem}
+  .bv.sec{background:none;color:var(--tenue);border:1px solid var(--borde)}
+  .reloj{font-size:clamp(1.8rem,4.2vw,3rem);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+  .reloj.urg{color:var(--cian)}
+
+  /* deliberación */
+  .delib{position:fixed;inset:0;z-index:35;background:#00174a;display:flex;flex-direction:column;
+         align-items:center;justify-content:center;text-align:center;padding:2rem;gap:.6rem}
+  .delib .t{font-size:.78rem;letter-spacing:.4em;color:var(--cian);font-weight:800}
+  .delib .q{font-size:clamp(1.3rem,3vw,2.4rem);font-weight:300;max-width:24ch;line-height:1.2}
+  .delib .c{font-size:clamp(4rem,14vw,10rem);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.05em}
+  .delib .h{font-size:.85rem;color:var(--tenue);max-width:38ch;line-height:1.5}
+
+  /* ---------------- consecuencia ---------------- */
+  .cons .et{font-size:.72rem;letter-spacing:.34em;color:var(--cian);font-weight:800;margin-bottom:.8rem}
+
+  /* ---------------- inventario ---------------- */
+  .inv .et{font-size:.72rem;letter-spacing:.34em;color:var(--cian);font-weight:800;margin-bottom:.5rem}
+  .inv h2{font-size:clamp(1.3rem,2.6vw,2.1rem);font-weight:800;letter-spacing:-.022em;line-height:1.1;max-width:24ch}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(19rem,24rem));justify-content:start;gap:.9rem;margin-top:clamp(.9rem,2.2vh,1.5rem)}
+  .card{background:var(--azul2);border:1px solid var(--borde);border-radius:14px;padding:1.15rem 1.25rem;position:relative}
+  .card .nuevo{position:absolute;top:-.55rem;left:1rem;background:var(--cian);color:var(--azul);
+               font-size:.6rem;font-weight:800;letter-spacing:.12em;padding:.15rem .5rem;border-radius:4px}
+  .card .due{font-size:.64rem;font-weight:800;color:var(--cian);margin-bottom:.3rem;letter-spacing:.06em}
+  .card h3{font-size:1.12rem;margin-bottom:.5rem;font-weight:800;letter-spacing:-.01em}
+  .card ul{list-style:none;display:flex;flex-direction:column;gap:.3rem}
+  .card li{font-size:.9rem;line-height:1.32;padding-left:.9rem;position:relative;color:rgba(255,255,255,.82)}
+  .card li::before{content:"";position:absolute;left:0;top:.5em;width:.3rem;height:.3rem;border-radius:50%;background:var(--cian)}
+  .pie{display:flex;flex-wrap:wrap;align-items:center;gap:1.2rem;margin-top:1.1rem}
+  .bseg{background:#fff;color:var(--azul);border-radius:9px;padding:.65rem 1.3rem;font-weight:800;font-size:.9rem}
+  .npie{font-size:.8rem;color:var(--tenue);max-width:42ch;line-height:1.4}
+
+  /* ---------------- invitado ---------------- */
+  .inv2{align-items:flex-start}
+  .igrid{display:grid;grid-template-columns:1.15fr .85fr;gap:clamp(1.5rem,4vw,4rem);align-items:center;width:100%}
+  .ireloj{text-align:left}
+  .ireloj .c{font-size:clamp(3.5rem,10vw,7.5rem);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.05em;line-height:1}
+  .ireloj .l{font-size:.72rem;letter-spacing:.2em;color:var(--tenue);font-weight:800;margin-top:.3rem}
+  .ireloj .c.urg{color:var(--cian)}
+  @media (max-width:1000px){.igrid{grid-template-columns:1fr}}
+  .inv2 .et{font-size:.75rem;letter-spacing:.4em;color:var(--cian);font-weight:800;margin-bottom:.8rem}
+  .inv2 .nom{font-size:clamp(2.2rem,6vw,4.6rem);font-weight:800;letter-spacing:-.04em;line-height:.95}
+  .inv2 .rol{font-size:clamp(.95rem,1.5vw,1.25rem);color:var(--tenue);margin-top:.5rem;max-width:36ch;line-height:1.4}
+  .preg{margin-top:clamp(1.2rem,3vh,2rem);border:1px solid var(--borde);border-left:3px solid var(--cian);
+        border-radius:0 12px 12px 0;padding:1rem 1.2rem;max-width:44ch}
+  .preg .l{font-size:.66rem;letter-spacing:.14em;color:var(--cian);font-weight:800;margin-bottom:.3rem}
+  .preg p{font-size:clamp(1.05rem,1.8vw,1.45rem);font-weight:300;line-height:1.3}
+
+  /* ---------------- final ---------------- */
+  .fgrid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(1.3rem,3.5vw,3rem);align-items:start}
+  .ftit{font-size:clamp(1.5rem,3.2vw,2.6rem);font-weight:800;letter-spacing:-.03em;line-height:1.05;max-width:18ch}
+  .hist{font-size:clamp(.94rem,1.3vw,1.12rem);line-height:1.55;font-weight:300;margin-top:.9rem;max-width:52ch}
+  .hist b{font-weight:700}
+  .epi{font-size:.95rem;color:var(--tenue);margin-top:.7rem;max-width:50ch;line-height:1.5}
+  .rej{display:grid;grid-template-columns:repeat(auto-fill,minmax(8.6rem,1fr));gap:.4rem;margin-top:.6rem}
+  .slot{border:1px solid var(--borde);border-radius:9px;padding:.45rem .6rem;font-size:.72rem;line-height:1.25;min-height:3rem;
+        display:flex;align-items:center}
+  .slot.on{background:var(--azul2);border-color:var(--cian);font-weight:700}
+  .slot.off{border-style:dashed;color:rgba(255,255,255,.35)}
+  .caja{background:var(--azul2);border-radius:13px;padding:1rem 1.15rem;margin-bottom:.8rem}
+  .caja h3{font-size:.95rem;margin-bottom:.45rem}
+  .caja li,.caja p{font-size:.84rem;line-height:1.42;color:var(--tenue);list-style:none}
+  .caja li b{color:#fff}
+  .cont{font-size:.8rem;color:var(--tenue);line-height:1.6;margin-top:1rem;border-top:1px solid var(--borde);padding-top:.8rem}
+  .cont b{color:#fff;font-weight:600}
+  .acc{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1.4rem}
+  .b1{background:#fff;color:var(--azul);border-radius:9px;padding:.75rem 1.5rem;font-weight:800}
+  .b2{border:1px solid var(--borde);border-radius:9px;padding:.75rem 1.2rem;color:var(--tenue)}
+
+  /* ---------------- config ---------------- */
+  .cfg{position:fixed;inset:0;z-index:45;background:#00174a;overflow-y:auto;padding:clamp(1.5rem,5vw,3.5rem)}
+  .cfg h2{font-size:1.5rem;letter-spacing:-.02em}
+  .cfg .d{font-size:.88rem;color:var(--tenue);max-width:52ch;margin:.5rem 0 1.6rem;line-height:1.5}
+  .campo{margin-bottom:1.1rem;max-width:34rem}
+  .campo label{display:block;font-size:.74rem;font-weight:800;color:var(--cian);margin-bottom:.3rem;letter-spacing:.05em}
+  .campo input,.campo select{width:100%;background:var(--azul2);border:1px solid var(--borde);border-radius:9px;
+    padding:.7rem .9rem;color:#fff;font-size:.95rem}
+  .campo .ay{font-size:.76rem;color:rgba(255,255,255,.45);margin-top:.3rem;line-height:1.4}
+
+  /* ---------------- guion / libreto ---------------- */
+  .guion{position:fixed;right:0;top:0;bottom:0;width:min(28rem,92vw);z-index:40;background:#00174a;
+         border-left:1px solid var(--borde);padding:1.4rem 1.5rem;overflow-y:auto}
+  .guion h2{font-size:1rem}
+  .guion .adv{font-size:.74rem;color:var(--tenue);margin:.2rem 0 1rem;line-height:1.45}
+  .gi{margin-bottom:1rem;border-left:2px solid var(--azul2);padding-left:.8rem}
+  .gi .q{font-size:.66rem;font-weight:800;color:var(--cian);margin-bottom:.12rem;letter-spacing:.04em}
+  .gi p{font-size:.88rem;line-height:1.48;color:rgba(255,255,255,.88)}
+  .guion .x{position:absolute;top:.8rem;right:1rem;font-size:1.3rem;color:var(--tenue)}
+
+  .lib{position:fixed;inset:0;z-index:50;background:#fff;color:var(--azul);overflow-y:auto;padding:clamp(1.3rem,5vw,3rem)}
+  .lib h1{font-size:clamp(1.4rem,2.8vw,2rem);letter-spacing:-.02em}
+  .lib .lead{max-width:62ch;margin:.5rem 0 1.8rem;line-height:1.55;color:#1c3a68}
+  .lb{border-top:1px solid #ccd8e8;padding:1.1rem 0;max-width:82ch}
+  .lb h2{font-size:1.05rem;margin-bottom:.25rem}
+  .lb p{font-size:.92rem;line-height:1.5;color:#16325c;margin-bottom:.3rem}
+  .lb .o2{margin-left:1rem}
+  .lb .say{background:#eef3f9;border-radius:9px;padding:.65rem .9rem;margin-top:.5rem;font-size:.9rem;line-height:1.45}
+  .lb .say b{display:block;font-size:.68rem;color:var(--azul2);margin-bottom:.08rem}
+  .xlib{position:fixed;top:1rem;right:1.1rem;background:var(--azul);color:#fff;border-radius:8px;
+        padding:.5rem 1rem;font-size:.86rem;font-weight:800;z-index:51}
+  .cartas{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;max-width:52rem;margin-top:.8rem}
+  .cta{border:2px solid var(--azul);border-radius:13px;aspect-ratio:3/4;display:grid;place-items:center;
+       font-size:3.5rem;font-weight:800;color:var(--azul)}
+  .cta.b{background:var(--azul);color:#fff}
+  .cta.c{background:var(--azul2);color:#fff;border-color:var(--azul2)}
+
+  @media (max-width:1000px){
+    .dec,.fgrid{grid-template-columns:1fr;gap:1.2rem}
+    .pers{grid-template-columns:1fr}
+    .linea{max-width:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  @media print{
+    body{background:#fff;color:#000;overflow:visible}
+    .app,.guion,.xlib{display:none!important}
+    .lib{position:static;padding:0}
+    .cartas{grid-template-columns:repeat(2,1fr)}
+    .cta{page-break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="hud off" id="hud">
+    <div class="hud-p">
+      <div class="hud-nom" id="hNom">—</div>
+      <div class="hud-ruta" id="hRuta">—</div>
+    </div>
+    <div class="meds" id="hMeds"></div>
+    <div class="objs"><span class="n" id="hObj">0</span><span class="l">objetos<br>desbloqueados</span></div>
+  </div>
+  <div class="zona" id="zona"></div>
+</div>
+
+<div class="guion oculto" id="guion">
+  <button class="x" id="xGuion" aria-label="Cerrar">&times;</button>
+  <h2>Guion de esta escena</h2>
+  <p class="adv">Solo para ensayo. Tecla <kbd>G</kbd>.</p>
+  <div id="gCont"></div>
+</div>
+
+<script>
+/* ==========================================================
+   SABANA · MODO HISTORIA — borrador 3
+   Consola visual · inventario · invitado real · consecuencias
+   ========================================================== */
+
+/* ---------- INVENTARIO: catálogo de objetos ---------- */
+const OBJ = {
+  adaptacion:{corto:"Kit de aterrizaje", due:"Bienestar", n:"Kit de aterrizaje en primer semestre", i:[
+    "Curso de adaptación a la vida universitaria",
+    "Tutoría para Becarios: alguien de semestres avanzados asignado a ti",
+    "Grupos de estudio",
+    "Vivienda Sabana, si llegas de otra ciudad"]},
+  buddy:{corto:"Buddy Program", due:"Internacional", n:"Buddy Program", i:[
+    "Acompañas a un estudiante internacional durante su semestre aquí",
+    "Cada semestre llegan estudiantes de intercambio a tu salón",
+    "Latin American Studies Program: extranjeros estudiando Colombia en el campus",
+    "No necesitas viajar para que el campus sea multicultural"]},
+  creaMetodo:{corto:"Método de estudio", due:"Bienestar · CREA", n:"Método de estudio", i:[
+    "Talleres para el éxito académico",
+    "Maratón de Estudios antes de finales",
+    "Grupos de estudio y acompañamiento a exámenes específicos",
+    "Calculadora de GPA para saber dónde estás parado"]},
+  creaPersona:{corto:"Brújula vocacional", due:"Bienestar · CREA", n:"Brújula vocacional", i:[
+    "Asesoramiento psicopedagógico uno a uno",
+    "Explora tu Carrera, también para los que ya entraron",
+    "Herramientas virtuales disponibles todo el semestre"]},
+  salud:{corto:"Salud en campus", due:"Bienestar", n:"Salud dentro del campus", i:[
+    "Medicina general, enfermería y medicina deportiva",
+    "Tu Línea Amiga: atención psicológica",
+    "Póliza de accidentes personales estudiantiles",
+    "Validación de incapacidades por SIGA"]},
+  campusSeguro:{corto:"Ruta de atención", due:"Bienestar", n:"Ruta de atención", i:[
+    "Protocolo para acoso y violencia sexual y de género",
+    "tulineamiga20@unisabana.edu.co · WhatsApp 312 323 33 33",
+    "Puedes escribir por ti o por alguien más"]},
+  cultura:{corto:"Grupos representativos", due:"Bienestar · Cultura", n:"Grupos representativos y agenda cultural", i:[
+    "15 grupos: coro, tunas, teatro, orquesta sinfónica, rock, pop, salsa y bachata, danza folclórica, danza urbana, percusión, vallenato, fusión",
+    "Cursos libres en artes para empezar de cero",
+    "Concursos, festivales y encuentros universitarios",
+    "Conciertos, exposiciones y salidas culturales"]},
+  deporte:{corto:"Selecciones y CAF", due:"Bienestar · Deporte", n:"Selecciones, torneos y CAF", i:[
+    "Selecciones deportivas y torneos internos",
+    "Centro de Acondicionamiento Físico",
+    "Cursos libres deportivos y recreación",
+    "Préstamo de equipos y escenarios · Convenio Smartfit"]},
+  solidaridad:{corto:"Misión Sabana", due:"Bienestar", n:"Solidaridad", i:[
+    "Misión Sabana y brigadas de voluntariado",
+    "Vacaciones solidarias",
+    "Huerta solidaria y grupo representativo de solidaridad",
+    "Más de 5.000 auxilios a estudiantes en condición económica vulnerable"]},
+  plata:{corto:"Fondo y PAT", due:"Bienestar", n:"De dónde sale la plata", i:[
+    "Fondo de Estudiantes: hasta el 50 % de la actividad, sin superar 1 SMLV",
+    "Dos representantes por programa en el gobierno universitario",
+    "Aprendamos a Trabajar (PAT): trabajas en la Universidad desde segundo semestre, con promedio de 3.4"]},
+  capellania:{corto:"Capellanía", due:"Bienestar", n:"Capellanía", i:[
+    "Acompañamiento espiritual y dirección personal",
+    "Eucaristía diaria, confesiones y confirmaciones",
+    "Participación libre para toda la comunidad"]},
+  glocal:{corto:"Conexión Global", due:"Internacional", n:"El mundo sin salir del campus", i:[
+    "Mundo en el Aula: proyectos en vivo con estudiantes de otros países",
+    "Asignaturas de tu carrera en inglés o tercera lengua",
+    "Cultura, Arte y Lenguaje (CAL)",
+    "Semestre virtual, cursos cortos y escuelas de verano en casa",
+    "Microcertificación Glocal Leader"]},
+  semestre:{corto:"Semestre afuera", due:"Internacional", n:"Semestre universitario en el exterior", i:[
+    "Uno o dos semestres en una universidad aliada",
+    "Homologación de materias: no pierdes el semestre",
+    "Microcertificación Global Connector",
+    "Asesorías de internacionalización para armar tu ruta"]},
+  verano:{corto:"Verano internacional", due:"Internacional", n:"Cursos de verano e invierno", i:[
+    "Programas cortos en el exterior, de dos a cuatro semanas",
+    "Salidas académicas y estancias de investigación",
+    "Rotaciones y prácticas clínicas internacionales",
+    "Microcertificación Global Explorer"]},
+  fondoMov:{corto:"Fondo de Movilidad", due:"Internacional", n:"Cómo se paga", i:[
+    "Fondo para la Movilidad de la Universidad",
+    "Convocatorias de becas nacionales e internacionales",
+    "Beca Xperience con modalidad de fondo de movilidad",
+    "Movilidad nacional en universidades aliadas en Colombia"]},
+  doble:{corto:"Doble titulación", due:"Internacional", n:"Doble titulación", i:[
+    "Terminas tu carrera en una universidad aliada y vuelves con dos títulos",
+    "Microcertificación Global Savvy",
+    "Doble grado CALA en la Escuela Internacional de Ciencias Económicas y Administrativas",
+    "Global Citizen: tres países o más"]},
+  practica:{corto:"Práctica internacional", due:"Internacional", n:"Práctica internacional", i:[
+    "Prácticas en empresas y organizaciones fuera del país",
+    "Estancias de investigación de cuatro meses en adelante",
+    "Microcertificación Global Connector",
+    "Hoja de vida internacional sin aplazar el grado"]}
+};
+const TODOS = Object.keys(OBJ);
+
+/* ---------- personajes jugables ---------- */
+const PJ = [
+  {k:"A", nombre:"Dani", tag:"Llegó becado desde Neiva. No conoce a nadie en Bogotá.", med:{energia:70,parche:10,mundo:5}},
+  {k:"B", nombre:"Sara", tag:"Estudió doce años en el mismo colegio. Se vino con dos amigas.", med:{energia:55,parche:35,mundo:8}},
+  {k:"C", nombre:"Nico", tag:"Habla inglés desde niño. Nunca ha tenido que pedir ayuda.", med:{energia:50,parche:12,mundo:32}}
+];
+
+/* ---------- invitado configurable ---------- */
+const INVITADO = {
+  nombre:"María José",
+  rol:"estudiante de séptimo semestre",
+  ruta:"escenario",
+  linea:"Está en un grupo representativo y se fue un semestre a México."
+};
+
+/* ==========================================================
+   NODOS
+   ========================================================== */
+function g(mec,b,i){ return {mec:mec,bien:b,inter:i}; }
+
+const N = {
+
+titulo:{tipo:"titulo"},
+
+personaje:{tipo:"personaje", kick:"Seleccionen a quién van a jugar",
+  guion:g("Cartas. Votación de práctica: aquí se enseña el sistema sin que nada esté en juego todavía.",
+    "Explica que los tres empiezan con estadísticas distintas y que eso cambia la partida. No es cosmético.",
+    "Cuenta la mitad derecha del salón.")},
+
+actoI:{tipo:"acto", n:"I", t:"Primer semestre", s:"Seis meses en los que todo es nuevo y nadie sabe pedir ayuda.",
+  next:"c1", guion:g("Ninguna.","Marca el cambio con la voz. Los actos ordenan la cabeza del público.","—")},
+
+c1:{tipo:"cine", kick:"11:58 p. m. · dieciocho meses después",
+  texto:"Faltan dos minutos para que cierre la convocatoria.", next:"c2",
+  guion:g("Ninguna. Silencio.","Esto es un flash-forward: arranca en el futuro. No expliques nada todavía.","Quieto.")},
+
+c2:{tipo:"cine", kick:"11:59 p. m.",
+  texto:"El cursor encima de <strong>Enviar</strong> y las manos frías.", next:"c3",
+  guion:g("Ninguna.","Tono de thriller, no de inducción.","—")},
+
+c3:{tipo:"cine",
+  texto:"Para entender por qué esto importa tanto, hay que devolverse <strong>al primer día</strong>.", next:"e1",
+  guion:g("Ninguna.","Aquí sí te presentas y explicas el kit de votación completo antes de seguir.","Preséntate también, para no aparecer de la nada.")},
+
+e1:{tipo:"cine", kick:"Día 1 · 6:40 a. m.",
+  texto:"Kilómetro 7, Autopista Norte. Ocho mil personas y {N} no conoce a ninguna.", next:"e1b",
+  guion:g("Ninguna.","Rápido, es solo el establecimiento.","—")},
+
+e1b:{tipo:"dec", kick:"Día 1 · 6:52 a. m.", mec:"carta", delib:true,
+  texto:"Alguien le toca el hombro.",
+  dlg:{q:"???", l:"Sorry… do you know where building A is? I think I'm very lost."},
+  ops:[
+    {k:"A", label:"Lo lleva. Total, tampoco sabe dónde queda nada.",
+      med:{parche:12,mundo:15,energia:-5}, flag:"theo", frag:"el primer día se perdió con un desconocido buscando el edificio A",
+      cons:{kick:"Cuarenta minutos después", t:"Llegaron tarde los dos. Pero {N} ya tiene un número de WhatsApp <strong>con prefijo +33</strong>."},
+      next:"inv_e1A"},
+    {k:"B", label:"Le señala hacia cualquier lado y sigue derecho.",
+      med:{energia:5,mundo:-5}, frag:"el primer día prefirió no meterse en problemas",
+      cons:{kick:"Dos semanas después", t:"Se lo encuentra en clase de CAL. <strong>Le tocó al lado el semestre entero.</strong>"},
+      next:"inv_e1B"}],
+  guion:g("Cartas. Abre mesa de discusión de 60 segundos: es la primera y hay que enseñarles a discutir.",
+    "No anuncies que esta decisión tiene consecuencias. Que se den cuenta en el acto III.",
+    "Tu primera aparición es en el minuto tres, no al final. Aprovéchala.")},
+
+inv_e1A:{tipo:"inv", et:"Objetos desbloqueados", titulo:"Nadie llega solo, y no todos llegan del mismo país",
+  objs:["adaptacion","buddy"], nota:"Se llama Théo, viene de Lyon y está aquí un semestre. El programa que lo acompaña tiene nombre.",
+  next:"e2", guion:g("Ninguna.","Treinta segundos. Señala dos cosas, no leas la carta.","Buddy Program y estudiantes de intercambio. Que quede claro que el campus ya es internacional.")},
+
+inv_e1B:{tipo:"inv", et:"Objetos desbloqueados", titulo:"El mundo igual se le sentó al lado",
+  objs:["adaptacion","buddy"], nota:"El campus se lo devolvió dos semanas después. Aquí eso pasa solo.",
+  next:"e2", guion:g("Ninguna.","Mismo contenido, otro tono: eligieron no meterse y la Universidad los cruzó igual.","Idem.")},
+
+e2:{tipo:"dec", kick:"Semana 7 · 11:40 p. m.", mec:"lados", delib:true,
+  texto:"Primer parcial: <strong>3.0</strong>. Estudió como en el colegio, releyendo la noche anterior.",
+  ops:[
+    {k:"A", label:"Pide cita en el CREA.", med:{energia:12}, frag:"pidió ayuda apenas vio la primera nota mala",
+      cons:{kick:"Cinco semanas después", t:"Segundo parcial: <strong>4.1</strong>. No estudió más horas. Estudió distinto."},
+      next:"inv_e2A"},
+    {k:"B", label:"Le mete tres trasnochos más.", med:{energia:-20,parche:-5}, flag:"quemado", frag:"intentó resolverlo a punta de trasnochos",
+      cons:{kick:"Cinco semanas después", t:"Segundo parcial: <strong>3.6</strong>. Y cuatro días sin dormir que se van a cobrar solos."},
+      next:"inv_e2B"},
+    {k:"C", label:"Piensa que se equivocó de carrera.", med:{energia:-8}, flag:"duda", frag:"llegó a pensar que se había equivocado de carrera",
+      cons:{kick:"Cinco semanas después", t:"Sigue en la misma carrera. Pero ahora <strong>sabe por qué</strong>, que no es lo mismo que seguir por inercia."},
+      next:"inv_e2C"}],
+  guion:g("Tres esquinas del salón. Que se paren: llevan diez minutos sentados. Mesa de discusión de 60 segundos.",
+    "Antes de votar pregunta a mano alzada quién ha sacado una nota peor de la que esperaba. Suben todas las manos. Ese es el punto.",
+    "Cuenta una de las tres esquinas.")},
+
+inv_e2A:{tipo:"inv", et:"Objeto desbloqueado", titulo:"Estudiar también se aprende",
+  objs:["creaMetodo"], nota:"El CREA no es refuerzo para los que van mal. Es entrenamiento, y {N} lo entendió en la semana 7 y no en la 14.",
+  next:"invitado1", guion:g("Ninguna.","Cuarenta segundos. Nombra la Maratón de Estudios, es lo que se recuerda.","—")},
+
+inv_e2B:{tipo:"inv", et:"Objetos desbloqueados", titulo:"Se puede a las malas. Pero se paga",
+  objs:["creaMetodo","salud"], nota:"Miren el medidor de energía. Bajó de verdad y va a cambiar el final.",
+  next:"invitado1", guion:g("Ninguna.","Señala el HUD: el medidor no es decorativo, arrastra consecuencias hasta el acto III.","—")},
+
+inv_e2C:{tipo:"inv", et:"Objetos desbloqueados", titulo:"A veces el problema no es el método",
+  objs:["creaPersona","capellania"], nota:"Uno de cada tres estudiantes se hace esta pregunta en primer año. Hay dónde llevarla.",
+  next:"invitado1", guion:g("Ninguna.","Explora tu Carrera también es para quien ya entró. Capellanía: participación libre, sin solemnidad.","—")},
+
+invitado1:{tipo:"invitado", et:"Invitado en partida",
+  preg:"¿Cómo fue tu primer semestre de verdad? ¿En qué se parece a lo que acaban de votar?",
+  next:"giro1",
+  guion:g("El invitado pasa al frente. Tres minutos, cronometrados de verdad.",
+    "Prepara la pregunta con él desde antes. Pídele una anécdota concreta, no un balance. Córtalo con cariño a los tres minutos.",
+    "Si su historia toca algo internacional, engánchalo aquí y no esperes al acto III.")},
+
+giro1:{tipo:"cine", kick:"Semana 11",
+  texto:"Kevin, el que se sienta al lado, <strong>lleva doce días sin aparecer</strong>. {N} le escribe. Visto.",
+  next:"giro1b", guion:g("Ninguna. Baja el volumen de la sala.","Cambio de tono deliberado. No hagas chiste aquí.","Quieto.")},
+
+giro1b:{tipo:"dec", kick:"Semana 11 · 4:15 p. m.", mec:"manos",
+  texto:"Nadie más parece haberse dado cuenta.",
+  ops:[
+    {k:"A", label:"Le cuenta a alguien de la Universidad.", med:{parche:10}, frag:"habló cuando un compañero desapareció",
+      cons:{kick:"Marzo", t:"Kevin volvió. Le escribió a {N} una sola frase: <strong>gracias por no dejarlo pasar</strong>."},
+      next:"inv_giro1A"},
+    {k:"B", label:"No es su problema. Sigue.", med:{parche:-8}, frag:"prefirió no meterse",
+      cons:{kick:"Marzo", t:"Kevin volvió igual. <strong>Alguien más sí habló.</strong>"},
+      next:"inv_giro1B"}],
+  guion:g("A mano alzada, sin cartas. Sin mesa de discusión: este se decide rápido y en silencio.",
+    "Deja tres segundos de silencio incómodo antes de abrir la votación. Funciona.","—")},
+
+inv_giro1A:{tipo:"inv", et:"Objetos desbloqueados", titulo:"Escribir por otro también vale",
+  objs:["salud","campusSeguro"], nota:"Los canales no son solo para cuando el que está mal eres tú.",
+  next:"actoII", guion:g("Ninguna.","Di el correo y el WhatsApp completos, despacio. Es el dato que los papás anotan.","—")},
+
+inv_giro1B:{tipo:"inv", et:"Objetos desbloqueados", titulo:"Alguien habló. No fue {N}",
+  objs:["salud","campusSeguro"], nota:"La historia termina igual. Lo que cambia es de qué lado quedó {N} ese día.",
+  next:"actoII", guion:g("Ninguna.","No regañes a la sala por votar B. Deja la frase y pasa. Sin moraleja funciona mejor.","—")},
+
+/* ===== ACTO II ===== */
+actoII:{tipo:"acto", n:"II", t:"Encontrar el parche", s:"Aquí la historia se parte en tres. Lo que elijan ahora no se puede deshacer.",
+  next:"e3", guion:g("Ninguna.","Anuncia en voz alta que viene la decisión que parte el juego. Súbele la apuesta.","—")},
+
+e3:{tipo:"dec", kick:"Miércoles · 2:00 p. m.", mec:"lados", delib:true,
+  texto:"Primera tarde libre del semestre. Cruzando la plaza oye <strong>tres cosas al tiempo</strong>.",
+  ops:[
+    {k:"A", label:"Una batería y un coro afinando.", med:{parche:15,energia:5}, set:{ruta:"escenario"}, frag:"siguió el sonido de una batería",
+      cons:{kick:"Audición abierta, jueves", t:"No sabía tocar nada. <strong>Igual se quedó.</strong> Para eso existen los cursos libres."},
+      next:"inv_e3A"},
+    {k:"B", label:"Un pito y gritos en la cancha.", med:{parche:12,energia:12}, set:{ruta:"cancha"}, frag:"se metió a la cancha sin que nadie lo invitara",
+      cons:{kick:"Ese mismo día", t:"Terminó de arquero porque faltaba uno. <strong>Dos años después es titular.</strong>"},
+      next:"inv_e3B"},
+    {k:"C", label:"Un camión descargando cajas de mercado.", med:{parche:10,energia:-2}, set:{ruta:"causa"}, frag:"se quedó ayudando a descargar un camión",
+      cons:{kick:"Ese mismo día", t:"El camión iba para Misión Sabana. <strong>Le costó las vacaciones dos años seguidos.</strong>"},
+      next:"inv_e3C"}],
+  guion:g("Tres esquinas. Mesa de discusión de 90 segundos: esta decisión merece pelea.",
+    "LA bifurcación. Diles que de aquí salen tres historias distintas y que hoy solo van a jugar una.",
+    "Prepárate: después de esta escena entra tu bloque grande.")},
+
+inv_e3A:{tipo:"inv", et:"Ruta desbloqueada · El escenario", titulo:"El arte aquí no es un club",
+  objs:["cultura"], nota:"Hace parte del modelo formativo. Y varios de estos grupos han representado a la Universidad fuera del país.",
+  next:"invitado2", guion:g("Ninguna.","Tu escena. Video de 20 segundos o estudiantes en vivo si se puede.","Una frase puente sobre los grupos que han viajado.")},
+
+inv_e3B:{tipo:"inv", et:"Ruta desbloqueada · La cancha", titulo:"De completar el equipo a selección",
+  objs:["deporte","salud"], nota:"Con medicina deportiva incluida cuando la rodilla protesta.",
+  next:"invitado2", guion:g("Ninguna.","Medicina deportiva pega mejor aquí que en la carta de salud.","Frase puente: hay torneos universitarios internacionales.")},
+
+inv_e3C:{tipo:"inv", et:"Ruta desbloqueada · La causa", titulo:"Ese camión le cambió el calendario",
+  objs:["solidaridad"], nota:"Un dato concreto de Misión Sabana vale más que la lista completa.",
+  next:"invitado2", guion:g("Ninguna.","Una historia concreta, no el portafolio.","Frase puente: hay voluntariados y prácticas sociales fuera del país.")},
+
+invitado2:{tipo:"invitado", et:"Invitado en partida",
+  preg:"Tú viviste una de estas tres rutas. ¿Qué te dio que no esperabas?",
+  next:"e4",
+  guion:g("Segunda entrada del invitado. Tres minutos.",
+    "Si eligieron su misma ruta, pídele el detalle. Si eligieron otra, pídele que cuente la suya: así cubrimos dos caminos de una.",
+    "—")},
+
+e4:{tipo:"dec", kick:"Séptimo semestre", mec:"carta", din:"e4", delib:true,
+  ops:[
+    {k:"A", label:"Toca puertas hasta conseguir el dinero.", med:{parche:10,energia:-6}, frag:"aprendió a pedir plata para un proyecto que no era suyo",
+      cons:{kick:"Tres semanas de reuniones", t:"Consiguió la mitad con el Fondo de Estudiantes y la otra mitad <strong>vendiendo empanadas en el lobby</strong>."},
+      next:"inv_e4"},
+    {k:"B", label:"Se lanza como representante para cambiarlo desde adentro.", med:{parche:14,energia:-8}, flag:"lider", frag:"se lanzó como representante de su programa",
+      cons:{kick:"Elecciones de marzo", t:"Ganó por catorce votos. Ahora le toca <strong>sentarse en la mesa donde se decide</strong>."},
+      next:"inv_e4"},
+    {k:"C", label:"Busca trabajo dentro de la Universidad y lo paga.", med:{energia:-10,parche:6}, flag:"pat", frag:"empezó a trabajar dentro del campus",
+      cons:{kick:"Desde el lunes", t:"Veinte horas a la semana. Menos tiempo libre, <strong>y una hoja de vida que ya no está en blanco</strong>."},
+      next:"inv_e4"}],
+  guion:g("Cartas, tres opciones. Mesa de discusión de 60 segundos.",
+    "Aquí hablas a dos públicos: el estudiante oye autonomía, el papá oye respaldo. Di las dos cifras exactas del Fondo.","Quieto.")},
+
+inv_e4:{tipo:"inv", et:"Objeto desbloqueado", titulo:"La hoja de vida empieza mucho antes del grado",
+  objs:["plata"], nota:"Fondo de Estudiantes, gobierno universitario y PAT: tres formas distintas de que la Universidad te respalde un proyecto.",
+  next:"npc1", guion:g("Ninguna.","50 % y 1 SMLV. PAT desde segundo semestre con promedio de 3.4.","—")},
+
+npc1:{tipo:"npc", kick:"En la cafetería", quien:"Mafe",
+  linea:"¿No sabías? Yo me metí a la selección ese mismo miércoles. Y Samuel volvió de Misión Sabana con el brazo quemado del sol.",
+  texto:"Los otros dos caminos también existieron. <strong>Solo que no los jugaron.</strong>",
+  next:"actoIII",
+  guion:g("Ninguna.","Quince segundos para nombrar las dos rutas que no eligieron. Que quede claro que existen y se pueden vivir aquí.","—")},
+
+/* ===== ACTO III ===== */
+actoIII:{tipo:"acto", n:"III", t:"El correo", s:"Dieciocho meses después del primer día. Aquí empezó esta historia.",
+  next:"e5", guion:g("Ninguna.","Recuérdales el arranque: las 11:58, el cursor sobre Enviar. Ya casi llegamos ahí.","Este acto es tuyo casi entero.")},
+
+e5:{tipo:"cine", kick:"Octavo semestre · 8:03 a. m.",
+  texto:"Correo institucional. Asunto: <strong>Convocatoria de movilidad</strong>. Cierra en seis días.",
+  next:"e5b", guion:g("Ninguna.","Esta es la convocatoria del principio. Todavía no lo digas.","Prepárate.")},
+
+e5b:{tipo:"dec", kick:"Octavo semestre", mec:"lados", din:"e5", delib:true,
+  ops:[
+    {k:"A", label:"Un semestre completo afuera.", med:{mundo:30,energia:-10,parche:-5}, set:{via:"semestre"}, frag:"se fue un semestre entero al exterior",
+      cons:{kick:"Seis meses después", t:"Otro idioma, otro sistema de notas y <strong>ninguna materia perdida</strong>: se las homologaron todas."},
+      next:"inv_e5A"},
+    {k:"B", label:"Un verano corto, para probar.", med:{mundo:18,energia:-3}, set:{via:"verano"}, frag:"empezó por un verano internacional, para probar",
+      cons:{kick:"Cuatro semanas después", t:"Volvió con una ciudad que no sabía pronunciar y <strong>con ganas de irse un semestre entero</strong>."},
+      next:"inv_e5B"},
+    {k:"C", label:"Se queda: hay otra forma de hacerlo.", med:{mundo:15,parche:10}, set:{via:"glocal"}, frag:"decidió que el mundo también se podía vivir desde aquí",
+      cons:{kick:"Ese semestre", t:"No sacó pasaporte. Terminó <strong>trabajando con gente de tres países</strong> sin salir del kilómetro 7."},
+      next:"inv_e5C"}],
+  guion:g("Tres esquinas. Mesa de discusión de 90 segundos. Antes de abrir, pregunta cuántos creen que estudiar afuera es imposible por plata; guarda esa respuesta.",
+    "Cede el micrófono completo.",
+    "Toma el control. Tres rutas reales, ninguna mejor que otra. Esa es la idea que debe quedar.")},
+
+inv_e5A:{tipo:"inv", et:"Objeto desbloqueado", titulo:"Un semestre afuera que sí cuenta",
+  objs:["semestre"], nota:"Se va un semestre y vuelve en el mismo semestre que sus compañeros.",
+  next:"giro2", guion:g("Ninguna.","—","Explica homologación en una frase simple. Es la duda número uno de los papás.")},
+
+inv_e5B:{tipo:"inv", et:"Objeto desbloqueado", titulo:"La puerta de entrada más fácil",
+  objs:["verano"], nota:"Muchos empiezan aquí y terminan yéndose un semestre completo al año siguiente.",
+  next:"giro2", guion:g("Ninguna.","—","Véndelo como la opción de bajo riesgo: convence a quien nunca ha viajado.")},
+
+inv_e5C:{tipo:"inv", et:"Objeto desbloqueado", titulo:"El mundo, sin salir del kilómetro 7",
+  objs:["glocal"], nota:"Es el rasgo de Conexión Global del modelo UniSabana Xperience: viaje o no viaje, su plan de estudios ya tiene sello internacional.",
+  next:"giro2", guion:g("Ninguna.","—","Tu escena más importante: internacionalización no es sinónimo de viajar, y ya está en el plan de estudios de todos.")},
+
+giro2:{tipo:"dec", kick:"Seis días después", mec:"manos",
+  texto:"Lo aceptan. Y entonces <strong>llega la cifra</strong>.",
+  ops:[
+    {k:"A", label:"Se pone a buscar cómo pagarlo.", med:{mundo:10}, flag:"beca", frag:"buscó hasta la última beca disponible",
+      cons:{kick:"Tres convocatorias después", t:"No se lo regalaron. <strong>Se lo buscó</strong>, con dos fondos y una carta de motivación reescrita cinco veces."},
+      next:"inv_giro2"},
+    {k:"B", label:"Casi se rinde. Casi.", med:{energia:-8}, frag:"estuvo a punto de renunciar por plata",
+      cons:{kick:"La noche del 14", t:"Estuvo a punto de no enviar nada. <strong>Alguien le dijo que preguntara primero.</strong>"},
+      next:"inv_giro2"}],
+  guion:g("A mano alzada.","—","El momento de la verdad del evento. La plata es la objeción real: ponla en pantalla, no la esquives.")},
+
+inv_giro2:{tipo:"inv", et:"Objeto desbloqueado", titulo:"La plata es una pregunta con respuesta",
+  objs:["fondoMov"], nota:"Hay fondo institucional y convocatorias abiertas cada año. La asesoría para armar la ruta no cuesta nada.",
+  next:"invitado3",
+  guion:g("Ninguna.","—","Nombra el Fondo para la Movilidad y la Beca Xperience. Invita a preguntar en la mesa al final.")},
+
+invitado3:{tipo:"invitado", et:"Invitado en partida",
+  preg:"¿Cómo pagaste lo tuyo y qué harías distinto si empezaras hoy?",
+  next:"e6",
+  guion:g("Tercera entrada. Tres minutos. Esta es la más importante de las cuatro.",
+    "—",
+    "Prepárala con él: que cuente cifras reales si se siente cómodo. Nada convence más que un estudiante diciendo cuánto costó y cómo lo resolvió.")},
+
+e6:{tipo:"dec", kick:"Décimo semestre", mec:"carta", din:"e6", delib:true,
+  ops:[
+    {k:"A", label:"Acepta: termina la carrera allá y vuelve con dos títulos.", med:{mundo:25,energia:-12}, flag:"doble", frag:"terminó la carrera afuera y volvió con dos títulos",
+      cons:{kick:"Dieciocho meses después", t:"Dos diplomas colgados en la misma pared. <strong>Un solo esfuerzo.</strong>"},
+      next:"inv_e6A"},
+    {k:"B", label:"Vuelve a terminar aquí, pero se va de práctica internacional.", med:{mundo:15,parche:8}, flag:"practica", frag:"volvió a graduarse aquí y se fue de práctica al exterior",
+      cons:{kick:"Grado, diciembre", t:"Se graduó con su grupo de siempre. Y con <strong>una práctica afuera</strong> en la hoja de vida."},
+      next:"inv_e6B"}],
+  guion:g("Cartas. Última votación del juego. Mesa de discusión de 60 segundos.",
+    "—","Última decisión grande. Ambas son reales: la doble titulación es un solo esfuerzo con dos diplomas.")},
+
+inv_e6A:{tipo:"inv", et:"Objeto desbloqueado", titulo:"Doble titulación",
+  objs:["doble"], nota:"Es el nivel Global Savvy. Arriba solo queda Global Citizen.",
+  next:"invitado4", guion:g("Ninguna.","—","Cierra con la escala completa de microcertificaciones.")},
+
+inv_e6B:{tipo:"inv", et:"Objeto desbloqueado", titulo:"Práctica internacional",
+  objs:["practica"], nota:"No hay una sola forma de tener perfil internacional. Hay una escala y cada quien arma su ruta.",
+  next:"invitado4", guion:g("Ninguna.","—","Mismo cierre: la escala y la idea de ruta propia.")},
+
+invitado4:{tipo:"invitado", et:"Invitado en partida · última entrada",
+  preg:"Si pudieras hablarle al {N} del primer día, ¿qué le dirías?",
+  next:"cierre",
+  guion:g("Última entrada. Dos minutos. Déjalo cerrar a él, no tú.",
+    "Que responda mirando al público, no a la pantalla. Después de esto solo queda el final.","—")},
+
+cierre:{tipo:"cine", kick:"11:59 p. m. · dieciocho meses antes",
+  texto:"El cursor sobre <strong>Enviar</strong>. Ahora sí sabemos qué estaba enviando.",
+  next:"final", guion:g("Ninguna.","Cierra el círculo. Pausa larga antes de pasar.","Cierre a dos voces.")},
+
+final:{tipo:"final"}
+};
+
+/* ---------- textos dinámicos ---------- */
+function din(cual){
+  const r=S.ruta, v=S.via;
+  if (cual==="e4"){
+    if (r==="escenario") return {kick:"Séptimo semestre · sala de ensayo",
+      texto:"Faltan tres semanas para el festival y <strong>no hay plata para los trajes</strong>."};
+    if (r==="cancha") return {kick:"Séptimo semestre · vestuario",
+      texto:"Clasificaron al torneo nacional y <strong>el bus no está pago</strong>."};
+    return {kick:"Séptimo semestre · bodega",
+      texto:"La brigada creció a cuarenta personas y <strong>ya no cabe en un camión prestado</strong>."};
+  }
+  if (cual==="e5"){
+    return S.flags.theo
+      ? {kick:"Octavo semestre · 8:04 a. m.",
+         texto:"Y entra un mensaje de alguien que {N} conoció el primer día.",
+         dlg:{q:"Théo", l:"Vi la convocatoria. Mi universidad tiene cupo en tu programa. Vente."}}
+      : {kick:"Octavo semestre · 8:04 a. m.",
+         texto:"Seis días para decidir algo que <strong>nadie en su familia ha hecho antes</strong>."};
+  }
+  if (cual==="e6"){
+    const d = v==="glocal" ? "la universidad con la que trabajó todo el semestre por videollamada"
+      : v==="verano" ? "la universidad donde hizo el verano" : "la universidad donde estuvo el semestre";
+    return {kick:"Décimo semestre", texto:"Llega una oferta desde "+d+": <strong>terminar la carrera allá</strong>."};
+  }
+  return {};
+}
+
+const FINALES = {
+  escenario:{semestre:"Tocaste en un país que no era el tuyo", verano:"Volviste con canciones que nadie aquí conocía", glocal:"Montaste un festival con tres universidades a la vez"},
+  cancha:{semestre:"Jugaste en una liga que al principio no entendías", verano:"Un mes entrenando afuera y volviste a ser titular", glocal:"Trajiste el torneo internacional al campus"},
+  causa:{semestre:"Serviste en un idioma que tuviste que aprender", verano:"Cuatro semanas afuera te cambiaron la pregunta", glocal:"Hiciste que el mundo llegara al kilómetro 7"}
+};
+const RUTAS={escenario:"El escenario",cancha:"La cancha",causa:"La causa"};
+const VIAS={semestre:"Semestre afuera",verano:"Verano internacional",glocal:"Ruta Glocal"};
+
+/* ==========================================================
+   MOTOR
+   ========================================================== */
+let S, nodo, reloj=null, t=0, pend=null, tInv=null;
+const $z=document.getElementById("zona"), $hud=document.getElementById("hud"),
+      $guion=document.getElementById("guion"), $gc=document.getElementById("gCont");
+
+function reset(){
+  S={nombre:"",pj:null,ruta:"",via:"",flags:{},med:{energia:60,parche:20,mundo:10},frags:[],inv:[]};
+  ir("titulo");
+}
+function ir(id){ nodo=id; pararReloj(); cerrarDelib(); if(tInv){clearInterval(tInv);tInv=null;} render(); }
+function txt(s){ return (s||"").replace(/\{N\}/g, S.nombre||"nuestro personaje"); }
+
+function hud(){
+  const n=N[nodo];
+  $hud.classList.toggle("off", !!n && (n.tipo==="titulo"||n.tipo==="personaje"));
+  document.getElementById("hNom").textContent=S.nombre||"—";
+  document.getElementById("hRuta").textContent=
+    (S.ruta?RUTAS[S.ruta]:"Sin ruta")+(S.via?" · "+VIAS[S.via]:"");
+  const d=[["energia","Energía"],["parche","Parche"],["mundo","Mundo"]];
+  document.getElementById("hMeds").innerHTML=d.map(function(x){
+    const v=Math.max(0,Math.min(100,S.med[x[0]]));
+    return '<div class="med"><div class="et"><span>'+x[1]+'</span><span>'+v+'</span></div>'+
+           '<div class="barra"><div class="rel" style="width:'+v+'%"></div></div></div>';}).join("");
+  document.getElementById("hObj").textContent=S.inv.length;
+}
+
+function flash(m){
+  const nn={energia:"Energía",parche:"Parche",mundo:"Mundo"},p=[];
+  for(var k in m) if(m[k]) p.push(nn[k]+" "+(m[k]>0?"+":"")+m[k]);
+  if(!p.length) return;
+  const v=document.querySelector(".flash"); if(v) v.remove();
+  const d=document.createElement("div"); d.className="flash"; d.textContent=p.join("  ·  ");
+  document.body.appendChild(d); setTimeout(function(){d.remove();},2600);
+}
+
+function render(){
+  const n=N[nodo];
+  ({titulo:pTitulo,personaje:pPersonaje,acto:pActo,cine:pCine,npc:pNpc,dec:pDec,
+    cons:pCons,inv:pInv,invitado:pInvitado,final:pFinal})[n.tipo](n);
+  hud(); pintarGuion(); $z.scrollTop=0;
+}
+
+/* ---------- pantallas ---------- */
+function pTitulo(){
+  $z.innerHTML='<div class="pant consola">'+
+    '<p class="marca">UNIVERSIDAD DE LA SABANA</p>'+
+    '<h1 class="titulo">Sabana<span>Modo Historia</span></h1>'+
+    '<p class="start parpadea">PULSA ESPACIO PARA EMPEZAR</p>'+
+    '<div class="menu-mini">'+
+      '<button class="mbtn" id="mCfg">Configurar invitado</button>'+
+      '<button class="mbtn" id="mLib">Guion y kit de votación</button>'+
+    '</div>'+
+    '<p class="pie-v">Borrador 3 · 8 decisiones · 3 rutas · 9 finales · Desarrollo Cultural y Relaciones Internacionales</p>'+
+    '</div>';
+  document.getElementById("mCfg").onclick=abrirCfg;
+  document.getElementById("mLib").onclick=abrirLib;
+}
+
+function pPersonaje(n){
+  $z.innerHTML='<div class="pant"><p class="kick">'+n.kick+'</p>'+
+    '<p class="linea" style="font-size:clamp(1.3rem,2.6vw,2.2rem)">Cada uno empieza con <strong>estadísticas distintas</strong>. Eso cambia la partida.</p>'+
+    '<div class="pers">'+PJ.map(function(p,i){
+      return '<button class="pcard" data-i="'+i+'"><span class="pk">'+p.k+'</span>'+
+        '<h3>'+p.nombre+'</h3><p class="tag">'+p.tag+'</p>'+
+        [["energia","Energía"],["parche","Parche"],["mundo","Mundo"]].map(function(m){
+          return '<div class="pstat"><span>'+m[1]+'</span><span>'+p.med[m[0]]+'</span></div>'+
+                 '<div class="pbar"><i style="width:'+p.med[m[0]]+'%"></i></div>';}).join("")+
+        '</button>';}).join("")+'</div></div>';
+  $z.querySelectorAll(".pcard").forEach(function(b){
+    b.onclick=function(){ const p=PJ[+b.dataset.i];
+      S.nombre=p.nombre; S.pj=p.k; S.med=Object.assign({},p.med); ir("actoI"); };});
+}
+
+function pActo(n){
+  $z.innerHTML='<div class="pant acto"><p class="acto-n">'+n.n+'</p>'+
+    '<p class="acto-t">'+n.t+'</p><p class="acto-s">'+n.s+'</p>'+
+    '<p class="pista">Espacio</p></div>';
+}
+
+function pCine(n){
+  $z.innerHTML='<div class="pant">'+(n.kick?'<p class="kick">'+txt(n.kick)+'</p>':'')+
+    '<p class="linea">'+txt(n.texto)+'</p><p class="pista">Espacio</p></div>';
+}
+
+function pNpc(n){
+  $z.innerHTML='<div class="pant"><p class="kick">'+txt(n.kick)+'</p>'+
+    '<div class="dlg"><span class="q">'+n.quien+'</span><p>'+txt(n.linea)+'</p></div>'+
+    '<p class="linea" style="margin-top:1.4rem;font-size:clamp(1.15rem,2.2vw,1.9rem)">'+txt(n.texto)+'</p>'+
+    '<p class="pista">Espacio</p></div>';
+}
+
+function instr(mec,c){
+  if(mec==="carta") return c===2?"Levanten la carta: azul = A, blanca = B":"Levanten la carta: azul = A, blanca = B. Sin carta = C";
+  if(mec==="lados") return c===2?"Muévanse: A izquierda, B derecha":"Muévanse: A izquierda, B centro, C derecha";
+  if(mec==="manos") return "Mano arriba por A. Ahora mano arriba por B";
+  return "Griten la letra";
+}
+
+function pDec(n){
+  const d=n.din?din(n.din):{};
+  const kick=txt(d.kick||n.kick||""), tx=txt(d.texto||n.texto||"");
+  const dl=d.dlg||n.dlg;
+  const ops=n.ops.map(function(o,i){
+    return '<button class="op" data-i="'+i+'"><span class="k">'+o.k+'</span><span>'+txt(o.label)+'</span></button>';}).join("");
+  $z.innerHTML='<div class="pant dec"><div>'+
+    (kick?'<p class="kick">'+kick+'</p>':'')+'<p class="linea">'+tx+'</p>'+
+    (dl?'<div class="dlg"><span class="q">'+dl.q+'</span><p>'+txt(dl.l)+'</p></div>':'')+
+    '</div><div class="voto"><p class="instr">'+instr(n.mec,n.ops.length)+'</p>'+ops+
+    '<div class="fila">'+
+      (n.delib?'<button class="bv sec" id="bDel">Mesa de discusión</button>':'')+
+      '<button class="bv" id="bVot">Abrir votación</button>'+
+      '<span class="reloj" id="rel"></span>'+
+    '</div></div></div>';
+  $z.querySelectorAll(".op").forEach(function(b){ b.onclick=function(){ elegir(+b.dataset.i); };});
+  document.getElementById("bVot").onclick=abrirVoto;
+  if(n.delib) document.getElementById("bDel").onclick=function(){ abrirDelib(tx); };
+}
+
+function abrirVoto(){
+  if(reloj) return; t=10;
+  const r=document.getElementById("rel"), b=document.getElementById("bVot");
+  if(b) b.textContent="Votando…"; if(r) r.textContent=t;
+  reloj=setInterval(function(){ t--;
+    if(r){ r.textContent=t>0?t:"¡Ya!"; if(t<=3) r.classList.add("urg"); }
+    if(t<=0){ pararReloj(); if(b) b.textContent="Marca la ganadora"; }},1000);
+}
+function pararReloj(){ if(reloj){clearInterval(reloj);reloj=null;} }
+
+function abrirDelib(preg){
+  cerrarDelib();
+  let s=60;
+  const d=document.createElement("div"); d.className="delib"; d.id="delib";
+  d.innerHTML='<p class="t">MESA DE DISCUSIÓN</p><p class="q">'+preg.replace(/<[^>]+>/g,"")+'</p>'+
+    '<p class="c" id="delibC">60</p>'+
+    '<p class="h">Grupos de cuatro o cinco. Se discute y se llega a un acuerdo. Cuando suene cero, se vota.</p>'+
+    '<button class="bv" id="delibX" style="margin-top:1rem">Cerrar y votar</button>';
+  document.body.appendChild(d);
+  document.getElementById("delibX").onclick=cerrarDelib;
+  d.dataset.iv=setInterval(function(){ s--; const c=document.getElementById("delibC");
+    if(c) c.textContent=s>0?s:"0"; if(s<=0) cerrarDelib(); },1000);
+}
+function cerrarDelib(){ const d=document.getElementById("delib");
+  if(d){ clearInterval(+d.dataset.iv); d.remove(); } }
+
+function elegir(i){
+  const n=N[nodo], o=n.ops[i]; if(!o) return;
+  pararReloj(); cerrarDelib();
+  const bs=$z.querySelectorAll(".op"); if(bs[i]) bs[i].classList.add("gana");
+  if(o.med){ for(var k in o.med) S.med[k]=Math.max(0,Math.min(100,S.med[k]+o.med[k])); flash(o.med); }
+  if(o.flag) S.flags[o.flag]=true;
+  if(o.set) for(var j in o.set) S[j]=o.set[j];
+  if(o.frag) S.frags.push(o.frag);
+  pend={cons:o.cons, next:o.next};
+  setTimeout(function(){ if(pend&&pend.cons){ nodo="_cons"; pararReloj(); pCons(); hud(); }
+    else ir(pend.next); },620);
+}
+
+function pCons(){
+  const c=pend.cons;
+  $z.innerHTML='<div class="pant cons"><p class="et">CONSECUENCIA</p>'+
+    '<p class="kick">'+txt(c.kick)+'</p><p class="linea">'+txt(c.t)+'</p>'+
+    '<p class="pista">Espacio</p></div>';
+}
+
+function pInv(n){
+  n.objs.forEach(function(o){ if(S.inv.indexOf(o)===-1) S.inv.push(o); });
+  const cs=n.objs.map(function(id){ const o=OBJ[id];
+    return '<div class="card"><span class="nuevo">NUEVO</span><p class="due">'+o.due+'</p>'+
+      '<h3>'+o.n+'</h3><ul>'+o.i.map(function(x){return "<li>"+x+"</li>";}).join("")+'</ul></div>';}).join("");
+  $z.innerHTML='<div class="pant inv"><p class="et">'+txt(n.et)+'</p>'+
+    '<h2>'+txt(n.titulo)+'</h2><div class="cards">'+cs+'</div>'+
+    '<div class="pie"><button class="bseg" id="seg">Seguir</button>'+
+    '<p class="npie">'+txt(n.nota||"")+'</p></div></div>';
+  document.getElementById("seg").onclick=function(){ ir(n.next); };
+}
+
+function pInvitado(n){
+  $z.innerHTML='<div class="pant inv2"><div class="igrid"><div>'+
+    '<p class="et">'+n.et.toUpperCase()+'</p>'+
+    '<p class="nom">'+INVITADO.nombre+'</p>'+
+    '<p class="rol">'+INVITADO.rol+'. '+INVITADO.linea+'</p>'+
+    '<div class="preg"><p class="l">PREGUNTA EN PANTALLA</p><p>'+txt(n.preg)+'</p></div>'+
+    '<p class="pista">Espacio cuando termine</p></div>'+
+    '<div class="ireloj"><p class="c" id="iC">3:00</p><p class="l">TIEMPO SUGERIDO</p></div>'+
+    '</div></div>';
+  let s2=180;
+  tInv=setInterval(function(){ s2--;
+    const c=document.getElementById("iC"); if(!c){ clearInterval(tInv); tInv=null; return; }
+    const m=Math.floor(Math.max(0,s2)/60), r=Math.max(0,s2)%60;
+    c.textContent=m+":"+(r<10?"0":"")+r;
+    if(s2<=30) c.classList.add("urg");
+    if(s2<=0){ clearInterval(tInv); tInv=null; }
+  },1000);
+}
+
+function pFinal(){
+  const r=S.ruta||"escenario", v=S.via||"glocal";
+  let ti=(FINALES[r]&&FINALES[r][v])||"Tu propia ruta";
+  if(S.flags.doble) ti="Con dos títulos: "+ti.charAt(0).toLowerCase()+ti.slice(1);
+  const fr=S.frags.slice(), ul=fr.pop();
+  const hist="<b>"+S.nombre+"</b> "+fr.join(", ")+" y, al final, "+ul+". Nada de eso aparecía en el pénsum.";
+  const ep=[];
+  if(S.med.energia<30) ep.push("Llegó al grado con la energía en el piso: esa parte también es real.");
+  else if(S.med.energia>70) ep.push("Y llegó entero, que no es poca cosa.");
+  if(S.med.parche>55) ep.push("No lo hizo solo en ningún momento.");
+  else if(S.med.parche<25) ep.push("Le tocó más solo de lo necesario, y no tenía por qué ser así.");
+  if(S.med.mundo>70) ep.push("Su hoja de vida cruzó fronteras antes del diploma.");
+
+  const rej=TODOS.map(function(id){
+    const on=S.inv.indexOf(id)!==-1;
+    return '<div class="slot '+(on?"on":"off")+'">'+OBJ[id].corto+'</div>';}).join("");
+
+  $z.innerHTML='<div class="pant"><div class="fgrid"><div>'+
+    '<p class="kick">Final desbloqueado · '+S.inv.length+' de '+TODOS.length+' objetos</p>'+
+    '<h2 class="ftit">'+ti+'</h2><p class="hist">'+hist+'</p>'+
+    (ep.length?'<p class="epi">'+ep.join(" ")+'</p>':'')+
+    '<div class="cont"><b>Bienestar y Experiencia del Estudiante</b> · experiencia.bienestar@unisabana.edu.co · @experienciaunisabana<br>'+
+    '<b>Relaciones Internacionales</b> · mobility@unisabana.edu.co · Plaza de los Balcones</div>'+
+    '</div><div>'+
+    '<div class="caja"><h3>Inventario de la partida</h3>'+
+    '<p>Lo punteado existe igual. Solo que esta historia cogió para otro lado.</p>'+
+    '<div class="rej">'+rej+'</div></div>'+
+    '<div class="caja"><h3>La escala de Conexión Global</h3><ul>'+
+    '<li><b>Glocal Leader</b> — el campus como entorno multicultural</li>'+
+    '<li><b>Global Explorer</b> — primera inmersión corta afuera</li>'+
+    '<li><b>Global Connector</b> — semestre o práctica internacional</li>'+
+    '<li><b>Global Savvy</b> — doble titulación</li>'+
+    '<li><b>Global Citizen</b> — tres países o más</li></ul></div>'+
+    '</div></div>'+
+    '<div class="acc"><button class="b1" id="otra">Jugar otra vez</button>'+
+    '<button class="b2" id="lib2">Guion y kit de votación</button></div></div>';
+  document.getElementById("otra").onclick=reset;
+  document.getElementById("lib2").onclick=abrirLib;
+}
+
+/* ---------- guion ---------- */
+function pintarGuion(){
+  const n=N[nodo];
+  if(!n||!n.guion){ $gc.innerHTML='<p class="adv">Sin guion en esta pantalla.</p>'; return; }
+  $gc.innerHTML='<div class="gi"><p class="q">Mecánica de sala</p><p>'+n.guion.mec+'</p></div>'+
+    '<div class="gi"><p class="q">Bienestar</p><p>'+n.guion.bien+'</p></div>'+
+    '<div class="gi"><p class="q">Internacional</p><p>'+n.guion.inter+'</p></div>';
+}
+
+/* ---------- configuración del invitado ---------- */
+function abrirCfg(){
+  const c=document.createElement("div"); c.className="cfg"; c.id="cfg";
+  c.innerHTML='<h2>Configurar invitado</h2>'+
+    '<p class="d">El estudiante que los acompaña entra cuatro veces al juego. Escribe sus datos aquí y las pantallas de invitado se ajustan solas.</p>'+
+    '<div class="campo"><label>Nombre</label><input id="cN" value="'+INVITADO.nombre+'"></div>'+
+    '<div class="campo"><label>Cómo presentarlo</label><input id="cR" value="'+INVITADO.rol+'">'+
+    '<p class="ay">Ejemplo: estudiante de séptimo semestre de Comunicación.</p></div>'+
+    '<div class="campo"><label>Una línea sobre lo que vivió</label><input id="cL" value="'+INVITADO.linea+'"></div>'+
+    '<div class="campo"><label>Ruta que más se parece a su historia</label>'+
+    '<select id="cRu"><option value="escenario">El escenario — cultura</option>'+
+    '<option value="cancha">La cancha — deporte</option>'+
+    '<option value="causa">La causa — solidaridad</option></select></div>'+
+    '<button class="bv" id="cOk">Guardar y volver</button>';
+  document.body.appendChild(c);
+  document.getElementById("cRu").value=INVITADO.ruta;
+  document.getElementById("cOk").onclick=function(){
+    INVITADO.nombre=document.getElementById("cN").value||INVITADO.nombre;
+    INVITADO.rol=document.getElementById("cR").value||INVITADO.rol;
+    INVITADO.linea=document.getElementById("cL").value||INVITADO.linea;
+    INVITADO.ruta=document.getElementById("cRu").value;
+    c.remove(); render();
+  };
+}
+
+/* ---------- libreto ---------- */
+function abrirLib(){
+  const cuerpo=Object.keys(N).filter(function(k){return N[k].guion;}).map(function(k){
+    const n=N[k];
+    const ops=(n.ops||[]).map(function(o){
+      return "<p class='o2'>"+o.k+". "+o.label+(o.cons?"  →  consecuencia: "+String(o.cons.t).replace(/<[^>]+>/g,""):"")+"</p>";}).join("");
+    const ob=(n.objs||[]).map(function(id){
+      return "<p><b>"+OBJ[id].n+"</b> ("+OBJ[id].due+"): "+OBJ[id].i.join("; ")+"</p>";}).join("");
+    return "<section class='lb'><h2>"+k+" · "+(n.kick||n.titulo||n.t||n.et||"")+"</h2>"+
+      (n.texto?"<p>"+String(n.texto).replace(/<[^>]+>/g,"")+"</p>":"")+
+      (n.preg?"<p><b>Pregunta al invitado:</b> "+n.preg+"</p>":"")+
+      ops+ob+
+      "<div class='say'><b>Mecánica de sala</b>"+n.guion.mec+"</div>"+
+      "<div class='say'><b>Bienestar</b>"+n.guion.bien+"</div>"+
+      "<div class='say'><b>Internacional</b>"+n.guion.inter+"</div></section>";}).join("");
+
+  const c=document.createElement("div"); c.className="lib";
+  c.innerHTML="<h1>Sabana · Modo Historia — guion completo</h1>"+
+    "<p class='lead'>Borrador 3. Ocho decisiones con ramificación real, cuatro entradas del invitado y una escena de consecuencia "+
+    "entre cada voto y sus objetos. Duración estimada: 48 a 54 minutos.</p>"+
+    "<section class='lb'><h2>Reparto de los 50 minutos</h2>"+
+    "<p class='o2'>Título, selección de personaje y explicación del kit — 5 min</p>"+
+    "<p class='o2'>Acto I, tres decisiones — 13 min</p>"+
+    "<p class='o2'>Invitado, entrada 1 — 3 min</p>"+
+    "<p class='o2'>Acto II, dos decisiones — 10 min</p>"+
+    "<p class='o2'>Invitado, entrada 2 — 3 min</p>"+
+    "<p class='o2'>Acto III, tres decisiones — 12 min</p>"+
+    "<p class='o2'>Invitado, entradas 3 y 4 — 5 min</p>"+
+    "<p class='o2'>Final e inventario — 4 min</p>"+
+    "<p><b>Si van cortos de tiempo:</b> quita las mesas de discusión de las escenas e4 y e6. Son seis minutos y no rompen nada.</p>"+
+    "<p><b>Si van sobrados:</b> alarga las mesas de discusión de e3 y e5b a dos minutos y pide que dos grupos defiendan su voto en voz alta antes de contar.</p></section>"+
+    "<section class='lb'><h2>Kit de votación</h2>"+
+    "<p><b>Materiales:</b> una carta por estudiante, azul de un lado, blanca del otro. Para tres opciones se usa el cuerpo, no la carta.</p>"+
+    "<p class='o2'>Carta — levantan la carta. Sirve hasta 60 personas, cuentas a ojo.</p>"+
+    "<p class='o2'>Lados — se paran y se mueven. Para las decisiones que parten la historia.</p>"+
+    "<p class='o2'>Manos — para los momentos íntimos, sin espectáculo.</p>"+
+    "<p class='o2'>Grito — solo para desempatar. El presentador nunca desempata.</p>"+
+    "<p><b>Mesa de discusión:</b> 60 a 90 segundos en grupos de cuatro o cinco antes de votar. Es lo que convierte ocho decisiones rápidas en cincuenta minutos que valen la pena.</p>"+
+    "<p><b>Grupos de 15:</b> usa más la mecánica de lados. Con pocos, el movimiento salva la energía.</p>"+
+    "<p><b>Grupos de 50:</b> divide la sala y asigna una mitad a cada presentador para contar.</p></section>"+
+    "<section class='lb'><h2>Cartas para imprimir</h2>"+
+    "<p>Imprime, recorta y reparte. Una por estudiante.</p>"+
+    "<div class='cartas'><div class='cta'>A</div><div class='cta b'>B</div><div class='cta c'>C</div></div></section>"+
+    "<section class='lb'><h2>El invitado</h2>"+
+    "<p>Entra cuatro veces. Prepara las cuatro preguntas con él <b>antes</b> del evento y avísale que lo vas a cortar a los tres minutos.</p>"+
+    "<p class='o2'>1. Después del primer parcial — ¿cómo fue tu primer semestre de verdad?</p>"+
+    "<p class='o2'>2. Después de la bifurcación — ¿qué te dio la ruta que viviste?</p>"+
+    "<p class='o2'>3. Después de la escena de la plata — ¿cómo pagaste lo tuyo? Es la más importante de las cuatro.</p>"+
+    "<p class='o2'>4. Antes del final — ¿qué le dirías al personaje del primer día?</p></section>"+
+    cuerpo;
+  const x=document.createElement("button"); x.className="xlib"; x.textContent="Cerrar";
+  x.onclick=function(){ c.remove(); x.remove(); };
+  document.body.appendChild(c); document.body.appendChild(x); x.focus();
+}
+
+/* ---------- teclado ---------- */
+document.getElementById("xGuion").onclick=function(){ $guion.classList.toggle("oculto"); };
+document.addEventListener("keydown",function(e){
+  const k=e.key.toLowerCase();
+  if(k==="g"){e.preventDefault();$guion.classList.toggle("oculto");return;}
+  if(k==="r"){e.preventDefault();reset();return;}
+  if(k==="f"){e.preventDefault();
+    if(document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen();
+    return;}
+  if(document.querySelector(".lib")||document.querySelector(".cfg")) return;
+  if(nodo==="_cons"){ if(k===" "||k==="enter"){e.preventDefault();ir(pend.next);} return; }
+  const n=N[nodo]; if(!n) return;
+  if(n.tipo==="dec"){
+    if(k==="v"){e.preventDefault();abrirVoto();return;}
+    if(k==="d"&&n.delib){e.preventDefault();abrirDelib(txt((n.din?din(n.din).texto:n.texto)||""));return;}
+    const i={a:0,b:1,c:2}[k];
+    if(i!==undefined){e.preventDefault();elegir(i);return;}
+  }
+  if(n.tipo==="personaje"){ const i={a:0,b:1,c:2}[k];
+    if(i!==undefined){e.preventDefault();const p=PJ[i];
+      S.nombre=p.nombre;S.pj=p.k;S.med=Object.assign({},p.med);ir("actoI");return;} }
+  if(k===" "||k==="enter"){
+    e.preventDefault();
+    if(n.tipo==="titulo") ir("personaje");
+    else if(["acto","cine","npc","inv","invitado"].indexOf(n.tipo)!==-1) ir(n.next);
+  }
+});
+
+reset();
+</script>
+</body>
+</html>
