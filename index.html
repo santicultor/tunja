@@ -28,7 +28,7 @@
           font-weight:800;color:var(--tenue);letter-spacing:.04em}
   .batras:hover:not(:disabled){color:#fff;border-color:#fff}
   .batras:disabled{opacity:.28;cursor:default}
-  .hud-p{min-width:7rem}
+  .hud-p{min-width:7rem;display:flex;align-items:center;gap:.5rem}
   .hud-nom{font-size:clamp(.8rem,1.1vw,.98rem);font-weight:800}
   .hud-ruta{font-size:.7rem;color:var(--tenue)}
   .vidas{display:flex;gap:clamp(.9rem,2.2vw,2rem);margin-left:auto;align-items:center}
@@ -43,6 +43,23 @@
   .objs .l{font-size:.6rem;color:var(--tenue);line-height:1.1}
   .flash{position:fixed;top:3.2rem;right:clamp(1rem,3vw,2.4rem);font-size:.85rem;font-weight:800;
          background:var(--azul2);border:1px solid var(--borde);border-radius:99px;padding:.34rem .95rem;z-index:30}
+
+  /* temporizador fijo de esquina para el speaker en turno */
+  .ctimer{position:fixed;right:clamp(1rem,3vw,2.2rem);bottom:clamp(1rem,3vh,2rem);z-index:32;
+          background:var(--azul2);border:1px solid var(--borde);border-radius:14px;
+          padding:.6rem 1.1rem;text-align:center;min-width:6.2rem;box-shadow:0 10px 30px rgba(0,10,30,.4)}
+  .ctimer .lab{font-size:.6rem;letter-spacing:.13em;color:var(--cian);font-weight:800;margin-bottom:.2rem}
+  .ctimer .c{font-size:1.7rem;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .ctimer .c.urg{color:var(--cian)}
+
+  /* avatares animados de personaje */
+  .avatar-wrap{width:60px;height:60px;margin-bottom:.55rem}
+  .avatar-svg{width:100%;height:100%;overflow:visible}
+  .avatar-bob{animation:bob 2.6s ease-in-out infinite;transform-origin:center}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  .avatar-lids{animation:blink 4.4s infinite}
+  @keyframes blink{0%,90%,100%{opacity:0}93%,96%{opacity:1}}
+  .avatar-mini{width:2.1rem;height:2.1rem;flex:0 0 auto}
 
   .zona{flex:1 1 auto;position:relative;overflow:hidden}
   .pant{position:absolute;inset:0;overflow-y:auto;display:flex;flex-direction:column;justify-content:center;
@@ -124,7 +141,7 @@
   .duenio{position:absolute;top:clamp(1rem,3.5vh,2.4rem);right:clamp(1.3rem,5vw,4.5rem);
           font-size:.62rem;font-weight:800;letter-spacing:.18em;color:rgba(255,255,255,.3)}
 
-  .cons .et{font-size:.72rem;letter-spacing:.34em;color:var(--cian);font-weight:800;margin-bottom:.8rem}
+  .cons .et,.invit .et{font-size:.72rem;letter-spacing:.34em;color:var(--cian);font-weight:800;margin-bottom:.8rem}
 
   /* ---------- inventario ---------- */
   .inv .et{font-size:.7rem;letter-spacing:.32em;color:var(--cian);font-weight:800;margin-bottom:.4rem}
@@ -149,11 +166,9 @@
   .npie{font-size:.82rem;color:var(--tenue);max-width:38ch;line-height:1.4}
 
   /* ---------- invitada ---------- */
-  .ig{display:grid;grid-template-columns:1.2fr .8fr;gap:clamp(1.5rem,4vw,4rem);align-items:center;width:100%}
-  .ig .et{font-size:.7rem;letter-spacing:.32em;color:var(--cian);font-weight:800;margin-bottom:.5rem}
-  .ig .nom{font-size:clamp(2.1rem,5.6vw,4.3rem);font-weight:800;letter-spacing:-.045em;line-height:.95}
-  .ig .rol{font-size:clamp(.92rem,1.45vw,1.2rem);color:var(--tenue);margin-top:.5rem;max-width:34ch;line-height:1.4}
-  .ig .real{font-size:.8rem;color:var(--cian);font-weight:800;margin-top:.6rem}
+  .nom{font-size:clamp(2.1rem,5.6vw,4.3rem);font-weight:800;letter-spacing:-.045em;line-height:.95}
+  .rol{font-size:clamp(.92rem,1.45vw,1.2rem);color:var(--tenue);margin-top:.5rem;max-width:34ch;line-height:1.4}
+  .real{font-size:.8rem;color:var(--cian);font-weight:800;margin-top:.6rem}
   .preg{margin-top:clamp(.9rem,2.2vh,1.5rem);border:1px solid var(--borde);border-left:3px solid var(--cian);
         border-radius:0 12px 12px 0;padding:.95rem 1.15rem;max-width:44ch}
   .preg .l{font-size:.62rem;letter-spacing:.14em;color:var(--cian);font-weight:800;margin-bottom:.28rem}
@@ -225,7 +240,7 @@
   .cta.c{background:var(--azul2);color:#fff;border-color:var(--azul2)}
 
   @media (max-width:1050px){
-    .dec,.fgrid,.ig{grid-template-columns:1fr;gap:1.2rem}
+    .dec,.fgrid{grid-template-columns:1fr;gap:1.2rem}
     .pers{grid-template-columns:1fr}
     .linea{max-width:none}
     .vida .lb{display:none}
@@ -245,7 +260,7 @@
 <div class="app">
   <div class="hud off" id="hud">
     <button class="batras" id="bAtras" disabled>&#9664; Atrás</button>
-    <div class="hud-p"><div class="hud-nom" id="hNom">—</div><div class="hud-ruta" id="hRuta">—</div></div>
+    <div class="hud-p"><div class="avatar-mini" id="hAv"></div><div><div class="hud-nom" id="hNom">—</div><div class="hud-ruta" id="hRuta">—</div></div></div>
     <div class="vidas" id="hVidas"></div>
     <div class="objs"><span class="n" id="hObj">0</span><span class="l">objetos<br>desbloqueados</span></div>
   </div>
@@ -272,8 +287,7 @@ const OBJ = {
     "Vivienda Sabana, si llegas de otra ciudad"]},
   buddy:{corto:"Buddy Program", due:"Internacional", n:"Buddy Program", i:[
     "Acompañas a un estudiante extranjero todo su semestre",
-    "Cada semestre llegan internacionales a tu salón",
-    "Latin American Studies Program"]},
+    "Cada semestre llegan internacionales a tu salón"]},
   creaMetodo:{corto:"Método de estudio", due:"Bienestar · CREA", n:"Método de estudio", i:[
     "Talleres para el éxito académico",
     "Maratón de Estudios antes de finales",
@@ -335,7 +349,7 @@ const OBJ = {
     "Mismo proceso, sin pasaporte",
     "Salidas académicas dentro del país"]},
   doble:{corto:"Doble titulación", due:"Internacional", n:"Doble titulación", i:[
-    "Terminas tu carrera afuera y vuelves con dos títulos",
+    "Terminas tu carrera en la universidad aliada y te gradúas con su título",
     "Microcertificación Global Savvy",
     "Doble grado CALA"]},
   practica:{corto:"Práctica internacional", due:"Internacional", n:"Práctica internacional", i:[
@@ -376,6 +390,24 @@ const INV = {
 
 function g(mec,b,i,e){ return {mec:mec,bien:b,inter:i,emp:e}; }
 
+/* avatar animado por personaje, construido en SVG (sin imágenes externas) */
+const ACC = {
+  A: '<path d="M20 14 Q32 2 46 15 L44 21 L20 21 Z" fill="var(--cian)"/>',
+  B: '<circle cx="47" cy="19" r="7" fill="var(--cian)"/><rect x="44" y="17" width="6" height="24" rx="3" fill="var(--cian)"/>',
+  C: '<path d="M10 30 a22 22 0 0 1 44 0" stroke="var(--cian)" stroke-width="5" fill="none"/><circle cx="10" cy="34" r="5" fill="var(--cian)"/><circle cx="54" cy="34" r="5" fill="var(--cian)"/>'
+};
+function avatarSVG(k){
+  const acc = ACC[k] || ACC.A;
+  return '<svg class="avatar-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">'+
+    '<g class="avatar-bob">'+ acc +
+    '<rect x="10" y="18" width="44" height="40" rx="16" fill="var(--azul2)" stroke="var(--cian)" stroke-width="2"/>'+
+    '<circle cx="24" cy="38" r="5" fill="#fff"/><circle cx="40" cy="38" r="5" fill="#fff"/>'+
+    '<circle cx="24" cy="38" r="2.4" fill="var(--azul)"/><circle cx="40" cy="38" r="2.4" fill="var(--azul)"/>'+
+    '<rect class="avatar-lids" x="18" y="35" width="12" height="6" fill="var(--azul2)"/>'+
+    '<rect class="avatar-lids" x="34" y="35" width="12" height="6" fill="var(--azul2)"/>'+
+    '</g></svg>';
+}
+
 const N = {
 titulo:{tipo:"titulo"},
 
@@ -413,7 +445,7 @@ d1:{tipo:"dec", area:"INTERNACIONAL", kick:"Día 1 · 6:52 a. m.", mec:"carta",
       next:"i_d1a"},
     {k:"B", label:"Le señala hacia cualquier lado y sigue derecho.", med:{energia:5,mundo:-5},
       clave:1, frag:"el primer día prefirió no meterse en problemas",
-      cons:{kick:"Dos semanas después", t:"Se lo encuentra en clase de CAL. <strong>Le tocó al lado el semestre entero.</strong>"},
+      cons:{kick:"Dos semanas después", t:"Se lo encuentra en clase de cálculo. <strong>Le tocó al lado el semestre entero.</strong>"},
       next:"i_d1b"}],
   guion:g("Cartas, diez segundos. Primera votación real: marca el ritmo.",
     "No anuncies que esta decisión tiene consecuencias. Que se den cuenta en el acto III.",
@@ -639,16 +671,16 @@ invitada3:{tipo:"invitada", kick:"Octavo semestre · cafetería",
 
 d12:{tipo:"dec", area:"INTERNACIONAL", kick:"Noveno semestre", mec:"carta", din:"d12",
   ops:[
-    {k:"A", label:"Acepta: termina la carrera allá y vuelve con dos títulos.", med:{mundo:25,energia:-12}, flag:"doble",
-      clave:1, frag:"terminó la carrera afuera y volvió con dos títulos",
-      cons:{kick:"Dieciocho meses después", t:"Dos diplomas en la misma pared. <strong>Un solo esfuerzo.</strong>"}, next:"i_d12a"},
+    {k:"A", label:"Acepta: termina la carrera allá y se gradúa con el título de la universidad aliada.", med:{mundo:25,energia:-12}, flag:"doble",
+      clave:1, frag:"terminó la carrera afuera y se graduó con el título de la universidad aliada",
+      cons:{kick:"Dieciocho meses después", t:"El diploma llegó desde afuera. <strong>Un solo esfuerzo, un título internacional.</strong>"}, next:"i_d12a"},
     {k:"B", label:"Vuelve a terminar aquí y se va de práctica internacional.", med:{mundo:15,parche:8}, flag:"practica",
       clave:1, frag:"volvió a graduarse aquí y se fue de práctica al exterior",
       cons:{kick:"Grado, diciembre", t:"Se graduó con su grupo de siempre. Y con <strong>una práctica afuera</strong> en la hoja de vida."}, next:"i_d12b"}],
-  guion:g("Cartas, diez segundos.","—","Ambas son reales: la doble titulación es un solo esfuerzo con dos diplomas.","Quieto: las dos últimas son tuyas.")},
+  guion:g("Cartas, diez segundos.","—","Ambas son reales: la doble titulación es un solo esfuerzo, con el título de la universidad aliada.","Quieto: las dos últimas son tuyas.")},
 
 i_d12a:{tipo:"inv", et:"Objeto desbloqueado", titulo:"Doble titulación",
-  objs:["doble"], nota:"Es el nivel Global Savvy. Arriba solo queda Global Citizen.",
+  objs:["doble"], nota:"Un solo esfuerzo académico, un título internacional. Es el nivel Global Savvy: arriba solo queda Global Citizen.",
   next:"d13", guion:g("Ninguna.","—","Cierra con la escala completa de microcertificaciones.","—")},
 i_d12b:{tipo:"inv", et:"Objeto desbloqueado", titulo:"Práctica internacional",
   objs:["practica"], nota:"No hay una sola forma de tener perfil internacional. Cada quien arma su ruta.",
@@ -675,7 +707,7 @@ d14:{tipo:"dec", area:"EMPRENDIMIENTO", kick:"Décimo semestre · correo de un d
     {k:"A", label:"Va solo. Es su idea.", med:{mundo:5,parche:-5}, frag:"fue solo a su primera reunión con un fondo",
       cons:{kick:"Martes, 4 p. m.", t:"Le hicieron catorce preguntas. <strong>No supo responder seis.</strong>"}, next:"i_d14"},
     {k:"B", label:"Pide que lo acompañe alguien del Centro.", med:{parche:12,mundo:6}, frag:"llegó acompañado a su primera reunión con un fondo",
-      cons:{kick:"Martes, 4 p. m.", t:"Fueron dos. <strong>Respondieron las catorce.</strong>"}, next:"i_d14"}],
+      cons:{kick:"Martes, 4 p. m.", t:"El mentor lo ayudó a prepararse antes. <strong>Esta vez no le faltó ninguna respuesta.</strong>"}, next:"i_d14"}],
   guion:g("A mano alzada. Última votación del juego.","—","—",
     "Tu cierre. El ecosistema es lo que un estudiante no puede construir solo: fondos, aceleradores, corporativos.")},
 
@@ -755,7 +787,7 @@ function corazones(v){
 }
 
 /* ===================== MOTOR ===================== */
-let S, nodo, reloj=null, t=0, pend=null, tInv=null, mSel=0, HIST=[];
+let S, nodo, reloj=null, t=0, pend=null, cTimer=null, mSel=0, HIST=[];
 const $z=document.getElementById("zona"), $hud=document.getElementById("hud"),
       $guion=document.getElementById("guion"), $gc=document.getElementById("gCont"),
       $atras=document.getElementById("bAtras");
@@ -766,11 +798,11 @@ function reset(){
 }
 function snap(){ return {nodo:nodo, S:JSON.parse(JSON.stringify(S)), pend:pend?JSON.parse(JSON.stringify(pend)):null}; }
 function avanzar(id){ HIST.push(snap()); ir(id); }
-function ir(id){ nodo=id; pararReloj(); if(tInv){clearInterval(tInv);tInv=null;} render(); }
+function ir(id){ nodo=id; pararReloj(); detenerTimer(); render(); }
 function atras(){
   if(!HIST.length) return;
   const h=HIST.pop(); S=h.S; pend=h.pend; nodo=h.nodo;
-  pararReloj(); if(tInv){clearInterval(tInv);tInv=null;}
+  pararReloj(); detenerTimer();
   const fl=document.querySelector(".flash"); if(fl) fl.remove();
   if(nodo==="_cons"){ pCons(); hud(); pintarGuion(); } else render();
 }
@@ -781,8 +813,10 @@ function hud(){
   $hud.classList.toggle("off", !!n && (n.tipo==="titulo"||n.tipo==="personaje"));
   $atras.disabled = HIST.length===0;
   document.getElementById("hNom").textContent=S.nombre||"—";
+  const hAv=document.getElementById("hAv");
+  if(hAv) hAv.innerHTML = S.pj ? avatarSVG(S.pj) : "";
   document.getElementById("hRuta").textContent=(S.ruta?RUTAS[S.ruta]:"Sin ruta")+(S.via?" · "+VIAS[S.via]:"");
-  const d=[["energia","ENERGÍA"],["parche","PARCHE"],["mundo","MUNDO"]];
+  const d=[["energia","ENERGÍA"],["parche","PARCHE"],["mundo","HORIZONTE"]];
   document.getElementById("hVidas").innerHTML=d.map(function(x){
     const c=corazones(S.med[x[0]]);
     return '<div class="vida" data-m="'+x[0]+'"><span class="cara">'+c.cara+'</span>'+
@@ -791,7 +825,7 @@ function hud(){
 }
 
 function flash(antes){
-  const nom={energia:"Energía",parche:"Parche",mundo:"Mundo"}, p=[];
+  const nom={energia:"Energía",parche:"Parche",mundo:"Horizonte"}, p=[];
   ["energia","parche","mundo"].forEach(function(k){
     const a=corazones(antes[k]), b=corazones(S.med[k]);
     if(a.n!==b.n) p.push(nom[k]+" "+(b.n>a.n?"\u25B2":"\u25BC")+" "+b.cara);
@@ -836,9 +870,10 @@ function pPersonaje(n){
   $z.innerHTML='<div class="pant"><p class="kick">'+n.kick+'</p>'+
     '<p class="linea" style="font-size:clamp(1.25rem,2.4vw,2rem)">Cada uno empieza con <strong>vidas distintas</strong>. Eso cambia la partida.</p>'+
     '<div class="pers">'+PJ.map(function(p,i){
-      return '<button class="pcard" data-i="'+i+'"><span class="pk">'+p.k+'</span><h3>'+p.nombre+'</h3>'+
+      return '<button class="pcard" data-i="'+i+'"><div class="avatar-wrap">'+avatarSVG(p.k)+'</div>'+
+        '<span class="pk">'+p.k+'</span><h3>'+p.nombre+'</h3>'+
         '<p class="tag">'+p.tag+'</p>'+
-        [["energia","Energía"],["parche","Parche"],["mundo","Mundo"]].map(function(m){
+        [["energia","Energía"],["parche","Parche"],["mundo","Horizonte"]].map(function(m){
           const c=corazones(p.med[m[0]]);
           return '<div class="pvida"><span>'+c.cara+'</span><span class="cor">'+c.html+'</span><span>'+m[1]+'</span></div>';}).join("")+
         '</button>';}).join("")+'</div></div>';
@@ -885,6 +920,21 @@ function abrirVoto(){
 }
 function pararReloj(){ if(reloj){clearInterval(reloj);reloj=null;} }
 
+function fmtT(s){ const m=Math.floor(Math.max(0,s)/60), r=Math.max(0,s)%60; return m+":"+(r<10?"0":"")+r; }
+function detenerTimer(){ if(cTimer){clearInterval(cTimer);cTimer=null;} const el=document.getElementById("ctimer"); if(el) el.remove(); }
+function iniciarTimer(segundos, etiqueta){
+  detenerTimer();
+  const el=document.createElement("div"); el.className="ctimer"; el.id="ctimer";
+  el.innerHTML='<div class="lab">'+etiqueta+'</div><div class="c" id="ctimerC">'+fmtT(segundos)+'</div>';
+  document.body.appendChild(el);
+  let s2=segundos;
+  cTimer=setInterval(function(){ s2--;
+    const c=document.getElementById("ctimerC"); if(!c){clearInterval(cTimer);cTimer=null;return;}
+    c.textContent=fmtT(s2); if(s2<=10) c.classList.add("urg");
+    if(s2<=0){clearInterval(cTimer);cTimer=null;}
+  },1000);
+}
+
 function elegir(i){
   const n=N[nodo], o=n.ops[i]; if(!o) return;
   pararReloj(); HIST.push(snap());
@@ -915,29 +965,28 @@ function pInv(n){
     '<div class="cards">'+cs+'</div>'+
     '<div class="pie"><button class="bseg" id="seg">Seguir</button><p class="npie">'+txt(n.nota||"")+'</p></div></div>';
   document.getElementById("seg").onclick=function(){ avanzar(n.next); };
+  const areas=[]; n.objs.forEach(function(id){
+    const a=OBJ[id].due.split(" \u00b7 ")[0].toUpperCase();
+    if(areas.indexOf(a)===-1) areas.push(a);
+  });
+  const dur = 40 * areas.length + (n.objs.length>areas.length ? 20 : 0);
+  iniciarTimer(dur, (areas.length>1?"HABLAN ":"HABLA ") + areas.join(" + "));
 }
 
 function pInvitada(n){
-  $z.innerHTML='<div class="pant"><div class="ig"><div>'+
+  $z.innerHTML='<div class="pant invit">'+
     '<p class="et">'+txt(n.kick)+'</p><p class="nom">'+INV.nombre+'</p>'+
     '<p class="rol">'+INV.rol+'. '+INV.linea+'</p>'+
     '<p class="real">'+txt(n.entrada)+'</p>'+
     '<div class="preg"><p class="l">PREGUNTA EN PANTALLA</p><p>'+txt(n.preg)+'</p></div>'+
-    '<p class="pista">Espacio cuando termine</p></div>'+
-    '<div class="ireloj"><p class="c" id="iC">3:00</p><p class="l">TIEMPO EN ESCENA</p></div></div></div>';
-  let s2=180;
-  tInv=setInterval(function(){ s2--;
-    const c=document.getElementById("iC"); if(!c){clearInterval(tInv);tInv=null;return;}
-    const m=Math.floor(Math.max(0,s2)/60), r=Math.max(0,s2)%60;
-    c.textContent=m+":"+(r<10?"0":"")+r;
-    if(s2<=30) c.classList.add("urg");
-    if(s2<=0){clearInterval(tInv);tInv=null;}},1000);
+    '<p class="pista">Espacio cuando termine</p></div>';
+  iniciarTimer(180, "HABLA LA INVITADA");
 }
 
 function pFinal(){
   const r=S.ruta||"escenario", v=S.via||"semestre";
   let ti=(FINALES[r]&&FINALES[r][v])||"Tu propia ruta";
-  if(S.flags.doble) ti="Con dos títulos: "+ti.charAt(0).toLowerCase()+ti.slice(1);
+  if(S.flags.doble) ti="Con título internacional: "+ti.charAt(0).toLowerCase()+ti.slice(1);
   let fr=S.frags.filter(function(x){return x.c;}).map(function(x){return x.t;});
   if(fr.length<3) fr=S.frags.map(function(x){return x.t;});
   const ul=fr.pop();
@@ -950,7 +999,7 @@ function pFinal(){
   if(cp.n===3) ep.push("No lo hizo solo en ningún momento.");
   else if(cp.n<=1) ep.push("Le tocó más solo de lo necesario, y no tenía por qué ser así.");
   if(cm.n===3) ep.push("Su hoja de vida cruzó fronteras antes del diploma.");
-  const vfin=[["energia","Energía",ce],["parche","Parche",cp],["mundo","Mundo",cm]].map(function(x){
+  const vfin=[["energia","Energía",ce],["parche","Parche",cp],["mundo","Horizonte",cm]].map(function(x){
     return '<div class="v"><span>'+x[2].cara+'</span><span class="cor">'+x[2].html+'</span><span>'+x[1]+'</span></div>';}).join("");
   const rej=TODOS.map(function(id){ const on=S.inv.indexOf(id)!==-1;
     return '<div class="slot '+(on?"on":"off")+'">'+OBJ[id].corto+'</div>';}).join("");
@@ -1051,14 +1100,18 @@ function abrirLib(){
     "<p class='o2'>Grito — solo para desempatar. El presentador nunca desempata.</p>"+
     "<p><b>Ritmo:</b> diez segundos y se cierra. Sin discusión previa: la gracia es decidir en caliente.</p>"+
     "<p><b>Si se equivocan al marcar:</b> el botón Atrás del HUD, o la flecha izquierda, devuelve la partida "+
-    "a la pantalla anterior con las vidas y los objetos como estaban.</p></section>"+
+    "a la pantalla anterior con las vidas y los objetos como estaban.</p>"+
+    "<p><b>Temporizador de esquina:</b> aparece solo, abajo a la derecha, apenas se revela una carta o entra la invitada. "+
+    "Dice qué área habla y cuánto tiempo tiene: 40 segundos por área, 20 más si la carta trae más de un objeto por área. "+
+    "Cuando marca 0:00 no se apaga solo; es la señal para que el presentador cierre y siga. Está pensado para que nadie "+
+    "tenga que mirar el reloj propio a media frase.</p></section>"+
     "<section class='lb'><h2>Cartas para imprimir</h2>"+
     "<div class='cartas'><div class='cta'>A</div><div class='cta b'>B</div><div class='cta c'>C</div></div></section>"+
     "<section class='lb'><h2>Las tres vidas</h2>"+
     "<p>Tres corazones por categoría. Tres corazones, cara feliz; dos, cara neutra; uno, cara preocupada; ninguno, cara de agotamiento.</p>"+
     "<p class='o2'>Energía — cuánto aguanta el cuerpo. La bajan los trasnochos y el exceso; la suben el CAF, el CREA y parar a tiempo.</p>"+
     "<p class='o2'>Parche — con cuánta gente cuenta. La sube meterse, pedir ayuda y acompañar; la baja aislarse.</p>"+
-    "<p class='o2'>Mundo — qué tanto se abrió. La suben el idioma, los proyectos con otros países y moverse.</p>"+
+    "<p class='o2'>Horizonte — qué tanto se abrió. La suben el idioma, los proyectos con otros países y moverse.</p>"+
     "<p>Al final, las tres caritas cambian el epílogo que se lee en voz alta.</p></section>"+
     "<section class='lb'><h2>La invitada</h2>"+
     "<p>No es un testimonio al final: es la tutora del protagonista y entra cuatro veces dentro de la ficción. "+
